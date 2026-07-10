@@ -6,6 +6,6 @@ import org.springframework.stereotype.Repository;
 import com.lmcdo.lmcdoBack.model.Character;
 
 @Repository 
-public interface CharacterRepository extends CrudRepository<Character, Long>{
+public interface CharacterRepository extends CrudRepository <Character, Long>{
 
 }
