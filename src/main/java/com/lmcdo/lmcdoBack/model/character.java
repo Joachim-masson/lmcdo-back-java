@@ -11,22 +11,25 @@ import lombok.Data;
 
 @Data 
 @Entity 
-@Table(name = "character") 
+@Table(name = "characters") 
 
 public class Character {
   @Id 
   @GeneratedValue(strategy = GenerationType.IDENTITY) 
+  @Column(name = "idcharacter")
   private Long id; 
 
   private String name; 
 
-  private int age; 
+  private Integer age; 
 
   private String origin; 
 
   private String picture; 
 
-  private String created_by;
+  @Column(name = "created_by")
+  private String createdBy;
 
-  private String created_date;
+  @Column(name = "created_date")
+  private String createdDate;
 }
