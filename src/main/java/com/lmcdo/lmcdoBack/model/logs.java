@@ -13,10 +13,10 @@ import lombok.Data;
 @Entity 
 @Table(name = "logs") 
 
-public class logs {
+public class Logs {
   @Id 
   @GeneratedValue(strategy = GenerationType.IDENTITY) 
   private Long id; 
 
-  
+
 }
