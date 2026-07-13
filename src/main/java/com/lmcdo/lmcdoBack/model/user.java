@@ -1,5 +1,7 @@
 package com.lmcdo.lmcdoBack.model;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Column; 
 import jakarta.persistence.Entity; 
 import jakarta.persistence.GeneratedValue; 
@@ -16,12 +18,36 @@ import lombok.Data;
 public class User {
   @Id 
   @GeneratedValue(strategy = GenerationType.IDENTITY) 
+  @Column(name="iduser") 
   private Long id; 
 
   @Column(name="username") 
   private String name; 
 
   @Column(name="email") 
-  private String idCo; 
+  private String email; 
 
+  @Column(name="user_role") 
+  private String userRole;
+  
+  @Column(name="is_active") 
+  private Boolean isActive;
+
+  @Column(name = "last_login_at")
+  private LocalDateTime lastLoginAt;
+
+  @Column(name = "email_verified_at")
+  private LocalDateTime emailVerifiedAt;
+
+  @Column(name = "created_at")
+  private LocalDateTime createdAt;
+
+  @Column(name = "updated_at")
+  private LocalDateTime updatedAt;
+
+  @Column(name = "deleted_at")
+  private LocalDateTime deletedAt;
+
+  @Column(name = "banned_at")
+  private LocalDateTime bannedAt;
 }
