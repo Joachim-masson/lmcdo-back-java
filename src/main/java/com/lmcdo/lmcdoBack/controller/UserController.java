@@ -17,7 +17,6 @@ import com.lmcdo.lmcdoBack.model.User;
 import com.lmcdo.lmcdoBack.service.UserService;
 
 @RestController // permet d’indiquer à Spring que cette classe est un bean.Elle indique à Spring d’insérer le retour de la méthode au format JSON dans le corps de la réponse HTTP
-@CrossOrigin(origins = "http://localhost:5173")
 
 public class UserController {
   @Autowired

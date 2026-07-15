@@ -16,7 +16,6 @@ import com.lmcdo.lmcdoBack.model.Character;
 import com.lmcdo.lmcdoBack.service.CharacterService;
 
 @RestController // permet d’indiquer à Spring que cette classe est un bean.Elle indique à Spring d’insérer le retour de la méthode au format JSON dans le corps de la réponse HTTP
-@CrossOrigin(origins = "http://localhost:5173")
 public class CharacterController {
   @Autowired
   private CharacterService characterService;
