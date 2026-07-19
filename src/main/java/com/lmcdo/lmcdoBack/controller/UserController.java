@@ -29,6 +29,15 @@ public class UserController {
 	 */
 	@PostMapping("/user")
 	public User createUser(@RequestBody User user) {
+		// Sécurité : On force le rôle "member" par défaut côté serveur
+    user.setUserRole("member");
+    
+    // Optionnel : Tu peux aussi forcer le statut actif ici pour être sûr
+    user.setIsActive(true);
+
+		// Sécurité : On génère la date de création exacte au moment précis de l'inscription
+    user.setCreatedAt(LocalDateTime.now());
+		
 		return userService.saveUser(user);
 	}
 
