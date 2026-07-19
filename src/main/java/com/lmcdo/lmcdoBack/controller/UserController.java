@@ -118,5 +118,24 @@ public class UserController {
 	public void deleteUser(@PathVariable("id") final Long id) {
 	  userService.deleteUser(id);
 	}
+
+	@PostMapping("/login")
+	public User loginUser(@RequestBody User loginData) {
+    // 1. Chercher tous les utilisateurs et filtrer par email (Mieux vaut créer une méthode findByEmail dans le Repository)
+    Iterable<User> users = userService.getUsers();
+    
+    for (User user : users) {
+        if (user.getEmail().equalsIgnoreCase(loginData.getEmail())) {
+    // 2. Vérification du mot de passe et si le compte est actif
+            if (user.getPassword().equals(loginData.getPassword()) && Boolean.TRUE.equals(user.getIsActive())) {
+                user.setLastLoginAt(LocalDateTime.now());
+                userService.saveUser(user); // Met à jour la date de dernière connexion
+                return user; 
+            }
+        }
+    }
+    // 3. Si aucun utilisateur trouvé ou mauvais mot de passe
+    throw new RuntimeException("Authentification échouée : email/mot de passe incorrect ou compte banni.");
+	}
 	
 }
