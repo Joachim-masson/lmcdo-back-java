@@ -4,7 +4,8 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.http.ResponseEntity;
+// import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -124,8 +125,13 @@ public class UserController {
 	 * @param id - The id of the user to delete
 	 */
 	@DeleteMapping("/user/{id}")
-	public void deleteUser(@PathVariable("id") final Long id) {
-	  userService.deleteUser(id);
+	public ResponseEntity<?> deleteUser(@PathVariable("id") final Long id) {
+	  boolean isDeleted = userService.deleteUser(id);
+		if (isDeleted) {
+        return ResponseEntity.ok().body("L'explorateur a été supprimé avec succès.");
+    } else {
+        return ResponseEntity.notFound().build();
+    }
 	}
 
 	@PostMapping("/login")
