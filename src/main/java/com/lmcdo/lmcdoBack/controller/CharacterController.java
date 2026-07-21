@@ -64,7 +64,7 @@ public class CharacterController {
 	 * @return
 	 */
 	@PutMapping("/character/{id}")
-	public Character updateEmployee(@PathVariable("id") final Long id, @RequestBody Character character) {
+	public Character updateCharacter(@PathVariable("id") final Long id, @RequestBody Character character) {
 		Optional<Character> e = characterService.getCharacter(id);
 		if(e.isPresent()) {
 			Character currentCharacter = e.get();
