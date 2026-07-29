@@ -52,7 +52,7 @@ public class UserService {
    */
   public User saveUser(User user) {
     // On hache le mot de passe uniquement s'il n'est pas vide et s'il n'est pas déjà haché
-    if (user.getPassword() != null && !user.getPassword().startsWith("{argon2}")) {
+    if (user.getPassword() != null && !user.getPassword().startsWith("$argon2") && !user.getPassword().startsWith("{argon2}")) {
       String encodedPassword = passwordEncoder.encode(user.getPassword());
       user.setPassword(encodedPassword);
     }
