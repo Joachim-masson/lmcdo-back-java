@@ -142,7 +142,9 @@ public class UserController {
     for (User user : users) {
         if (user.getEmail().equalsIgnoreCase(loginData.getEmail())) {
     // 2. Vérification du mot de passe et si le compte est actif
-            if (user.getPassword().equals(loginData.getPassword()) && Boolean.TRUE.equals(user.getIsActive())) {
+					boolean isPasswordValid = userService.verifyPassword(loginData.getPassword(), user.getPassword());
+
+            if (isPasswordValid && Boolean.TRUE.equals(user.getIsActive())) {
                 user.setLastLoginAt(LocalDateTime.now());
                 userService.saveUser(user); // Met à jour la date de dernière connexion
                 return user; 

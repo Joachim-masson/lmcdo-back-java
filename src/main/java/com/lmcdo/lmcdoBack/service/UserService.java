@@ -4,10 +4,12 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.lmcdo.lmcdoBack.model.User;
 import com.lmcdo.lmcdoBack.repository.UserRepository;
-import org.springframework.transaction.annotation.Transactional;
 
 import lombok.Data;
 
@@ -15,19 +17,22 @@ import lombok.Data;
 @Service
 public class UserService {
   @Autowired
-  private UserRepository UserRepository;
+  private UserRepository userRepository;
+
+  @Autowired
+  private PasswordEncoder passwordEncoder;
 
   public Optional<User> getUser(final Long id) {
-    return UserRepository.findById(id);
+    return userRepository.findById(id);
   }
 
   public Iterable<User> getUsers() {
-    return UserRepository.findAll();
+    return userRepository.findAll();
   }
 
   @Transactional
   public boolean deleteUser(final Long id) {
-    return UserRepository.findById(id).map(user -> {
+    return userRepository.findById(id).map(user -> {
         // 1. Anonymisation des données pour libérer les contraintes d'unicité
         user.setName("DeletedUser_" + id);
         user.setEmail("deleted_" + id + "@lmcdo.local");
@@ -37,13 +42,27 @@ public class UserService {
         user.setIsActive(false);
         user.setDeletedAt(LocalDateTime.now());
 
-        UserRepository.save(user);
+        userRepository.save(user);
         return true;
     }).orElse(false);
   }
 
+  /**
+   * Sauvegarde l'utilisateur en hachant son mot de passe avec Argon2 s'il a été modifié
+   */
   public User saveUser(User user) {
-    User savedUser = UserRepository.save(user);
-    return savedUser;
+    // On hache le mot de passe uniquement s'il n'est pas vide et s'il n'est pas déjà haché
+    if (user.getPassword() != null && !user.getPassword().startsWith("{argon2}")) {
+      String encodedPassword = passwordEncoder.encode(user.getPassword());
+      user.setPassword(encodedPassword);
+    }
+    return userRepository.save(user);
+  }
+
+  /**
+     * Vérifie si le mot de passe en clair correspond au hash Argon2 stocké en base
+     */
+  public boolean verifyPassword(String rawPassword, String encodedPassword) {
+    return passwordEncoder.matches(rawPassword, encodedPassword);
   }
 }
