@@ -9,3 +9,5 @@ import com.lmcdo.lmcdoBack.model.User;
 public interface UserRepository extends CrudRepository <User, Long>{
 
 }
+
+
