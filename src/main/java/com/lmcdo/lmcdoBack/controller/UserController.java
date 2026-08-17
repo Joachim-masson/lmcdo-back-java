@@ -1,6 +1,7 @@
 package com.lmcdo.lmcdoBack.controller;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import com.lmcdo.lmcdoBack.model.User;
 import com.lmcdo.lmcdoBack.service.UserService;
 
@@ -26,6 +28,7 @@ import java.util.Set;
 public class UserController {
   @Autowired
   private UserService userService;
+	private PasswordEncoder passwordEncoder;
 
     /**
 	 * Create - Add a new user
@@ -35,7 +38,7 @@ public class UserController {
 	@PostMapping("/user")
 	public User createUser(@RequestBody User user) {
 		// Sécurité : On force le rôle "member" par défaut côté serveur
-    user.setRoles(Set.of("MEMBER"));
+    user.setRoles(new HashSet<>(Set.of("MEMBER")));
     
     // Optionnel : Tu peux aussi forcer le statut actif ici pour être sûr
     user.setIsActive(true);
@@ -86,16 +89,29 @@ public class UserController {
 			User currentUser = e.get();
 			boolean hasChanged = false; // Flag facultatif mais propre pour savoir s'il y a eu des modifs
 
+			// 1. Nom d'utilisateur
 			String name = user.getName();
 			if(name != null) {
 				currentUser.setName(name);
         hasChanged = true;
 			}
+
+			// 2. Rôles (Set<String>)
 			Set<String> roles = user.getRoles();
 			if(roles != null) {
 				currentUser.setRoles(roles);
         hasChanged = true;
 			}
+
+			// 3. Mot de passe (Hachage sécurisé)
+      String rawPassword = user.getPassword();
+      if (rawPassword != null && !rawPassword.isBlank()) {
+        // Remplacez par votre méthode de hachage si gérée dans userService (ex: userService.encodePassword(rawPassword))
+        currentUser.setPassword(passwordEncoder.encode(rawPassword));
+        hasChanged = true;
+      }
+
+			// 4. Statut actif / inactif & Bannissement
 			Boolean isActive = user.getIsActive(); // Utilise bien l'objet Boolean (Majuscule) dans ton modèle User
         if (isActive != null) {
             // Si le statut change réellement
@@ -113,8 +129,9 @@ public class UserController {
             }
         }
 		
+			// 5. Sauvegarde si au moins un champ a changé
 			if (hasChanged) {
-            currentUser.setUpdatedAt(LocalDateTime.now()); // Assure-toi d'avoir le setter correspondant
+            currentUser.setUpdatedAt(LocalDateTime.now()); 
             userService.saveUser(currentUser);
         }
 			return currentUser;
