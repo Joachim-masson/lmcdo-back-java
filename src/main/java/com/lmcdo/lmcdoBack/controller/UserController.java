@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.lmcdo.lmcdoBack.model.User;
 import com.lmcdo.lmcdoBack.service.UserService;
 
+import java.util.Set;
+
 @RestController // permet d’indiquer à Spring que cette classe est un bean.Elle indique à Spring d’insérer le retour de la méthode au format JSON dans le corps de la réponse HTTP
 
 public class UserController {
@@ -33,7 +35,7 @@ public class UserController {
 	@PostMapping("/user")
 	public User createUser(@RequestBody User user) {
 		// Sécurité : On force le rôle "member" par défaut côté serveur
-    user.setUserRole("member");
+    user.setRoles(Set.of("MEMBER"));
     
     // Optionnel : Tu peux aussi forcer le statut actif ici pour être sûr
     user.setIsActive(true);
@@ -89,9 +91,9 @@ public class UserController {
 				currentUser.setName(name);
         hasChanged = true;
 			}
-			String userRole = user.getUserRole();
-			if(userRole != null) {
-				currentUser.setUserRole(userRole);
+			Set<String> roles = user.getRoles();
+			if(roles != null) {
+				currentUser.setRoles(roles);
         hasChanged = true;
 			}
 			Boolean isActive = user.getIsActive(); // Utilise bien l'objet Boolean (Majuscule) dans ton modèle User
