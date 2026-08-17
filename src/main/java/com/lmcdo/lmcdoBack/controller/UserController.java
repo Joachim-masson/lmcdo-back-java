@@ -1,10 +1,14 @@
 package com.lmcdo.lmcdoBack.controller;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
+// import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,14 +17,18 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import com.lmcdo.lmcdoBack.model.User;
 import com.lmcdo.lmcdoBack.service.UserService;
+
+import java.util.Set;
 
 @RestController // permet d’indiquer à Spring que cette classe est un bean.Elle indique à Spring d’insérer le retour de la méthode au format JSON dans le corps de la réponse HTTP
 
 public class UserController {
   @Autowired
   private UserService userService;
+	private PasswordEncoder passwordEncoder;
 
     /**
 	 * Create - Add a new user
@@ -29,6 +37,15 @@ public class UserController {
 	 */
 	@PostMapping("/user")
 	public User createUser(@RequestBody User user) {
+		// Sécurité : On force le rôle "member" par défaut côté serveur
+    user.setRoles(new HashSet<>(Set.of("MEMBER")));
+    
+    // Optionnel : Tu peux aussi forcer le statut actif ici pour être sûr
+    user.setIsActive(true);
+
+		// Sécurité : On génère la date de création exacte au moment précis de l'inscription
+    user.setCreatedAt(LocalDateTime.now());
+		
 		return userService.saveUser(user);
 	}
 
@@ -72,16 +89,29 @@ public class UserController {
 			User currentUser = e.get();
 			boolean hasChanged = false; // Flag facultatif mais propre pour savoir s'il y a eu des modifs
 
+			// 1. Nom d'utilisateur
 			String name = user.getName();
 			if(name != null) {
 				currentUser.setName(name);
         hasChanged = true;
 			}
-			String userRole = user.getUserRole();
-			if(userRole != null) {
-				currentUser.setUserRole(userRole);
+
+			// 2. Rôles (Set<String>)
+			Set<String> roles = user.getRoles();
+			if(roles != null) {
+				currentUser.setRoles(roles);
         hasChanged = true;
 			}
+
+			// 3. Mot de passe (Hachage sécurisé)
+      String rawPassword = user.getPassword();
+      if (rawPassword != null && !rawPassword.isBlank()) {
+        // Remplacez par votre méthode de hachage si gérée dans userService (ex: userService.encodePassword(rawPassword))
+        currentUser.setPassword(passwordEncoder.encode(rawPassword));
+        hasChanged = true;
+      }
+
+			// 4. Statut actif / inactif & Bannissement
 			Boolean isActive = user.getIsActive(); // Utilise bien l'objet Boolean (Majuscule) dans ton modèle User
         if (isActive != null) {
             // Si le statut change réellement
@@ -99,8 +129,9 @@ public class UserController {
             }
         }
 		
+			// 5. Sauvegarde si au moins un champ a changé
 			if (hasChanged) {
-            currentUser.setUpdatedAt(LocalDateTime.now()); // Assure-toi d'avoir le setter correspondant
+            currentUser.setUpdatedAt(LocalDateTime.now()); 
             userService.saveUser(currentUser);
         }
 			return currentUser;
@@ -115,8 +146,37 @@ public class UserController {
 	 * @param id - The id of the user to delete
 	 */
 	@DeleteMapping("/user/{id}")
-	public void deleteUser(@PathVariable("id") final Long id) {
-	  userService.deleteUser(id);
+	public ResponseEntity<?> deleteUser(@PathVariable("id") final Long id) {
+	  boolean isDeleted = userService.deleteUser(id);
+		if (isDeleted) {
+        return ResponseEntity.ok().body("L'explorateur a été supprimé avec succès.");
+    } else {
+        return ResponseEntity.notFound().build();
+    }
+	}
+
+	@PostMapping("/login")
+	public User loginUser(@RequestBody User loginData) {
+    // 1. Chercher tous les utilisateurs et filtrer par email (Mieux vaut créer une méthode findByEmail dans le Repository)
+    Iterable<User> users = userService.getUsers();
+    
+    for (User user : users) {
+        if (user.getEmail().equalsIgnoreCase(loginData.getEmail())) {
+    // 2. Vérification du mot de passe et si le compte est actif
+					boolean isPasswordValid = userService.verifyPassword(loginData.getPassword(), user.getPassword());
+
+            if (isPasswordValid && Boolean.TRUE.equals(user.getIsActive())) {
+                user.setLastLoginAt(LocalDateTime.now());
+                // userService.saveUser(user); // Met à jour la date de dernière connexion
+                return user; 
+            }
+        }
+    }
+    // 3. Si aucun utilisateur trouvé ou mauvais mot de passe
+    throw new ResponseStatusException(
+        HttpStatus.UNAUTHORIZED, 
+        "Combinaison identifiants/mot de passe incorrects ou compte inactif."
+    );
 	}
 	
 }
